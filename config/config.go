@@ -51,9 +51,9 @@ func LoadConfig() *Config {
 		TelegramToken:                k.MustString("TELEGRAM_TOKEN"),
 		TelegramChatId:               k.MustString("TELEGRAM_CHAT_ID"),
 		Client:                       http.DefaultClient,
-		WorkSleepSeconds:             int64(defaultInt(k, "WORK_SLEEP_SECONDS", defaultWorkSleepSeconds)),
+		WorkSleepSeconds:             defaultInt(k, "WORK_SLEEP_SECONDS", defaultWorkSleepSeconds),
 		MessageBatchCount:            defaultInt(k, "MESSAGE_BATCH_COUNT", defaultMessageBatchCount),
-		PostRelayMessageSleepSeconds: int64(defaultInt(k, "POST_RELAY_MESSAGE_SLEEP_SECONDS", defaultPostRelayMessageSleepSeconds)),
+		PostRelayMessageSleepSeconds: defaultInt(k, "POST_RELAY_MESSAGE_SLEEP_SECONDS", defaultPostRelayMessageSleepSeconds),
 		GotifyTokenHeaderKey:         gotifyTokenHeaderKey,
 	}
 }
