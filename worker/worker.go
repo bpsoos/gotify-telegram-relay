@@ -19,40 +19,46 @@ var logger = logging.GetLogger()
 type Worker struct {
 	gotifyBaseUrl                string
 	gotifyClientToken            string
+	gotifyAppId                  string
 	telegramToken                string
 	telegramChatId               string
 	messageBatchCount            int
 	postRelayMessageSleepSeconds int
 	client                       *http.Client
 	gotifyTokenHeaderKey         string
+	disableTelegramNotification  bool
 }
 
 type Config struct {
 	GotifyBaseUrl                string
 	GotifyClientToken            string
+	GotifyAppId                  string
 	TelegramToken                string
 	TelegramChatId               string
 	MessageBatchCount            int
 	PostRelayMessageSleepSeconds int
 	Client                       *http.Client
 	GotifyTokenHeaderKey         string
+	DisableTelegramNotification  bool
 }
 
 func NewWorker(config *Config) *Worker {
 	return &Worker{
 		gotifyBaseUrl:                config.GotifyBaseUrl,
 		gotifyClientToken:            config.GotifyClientToken,
+		gotifyAppId:                  config.GotifyAppId,
 		telegramToken:                config.TelegramToken,
 		telegramChatId:               config.TelegramChatId,
 		messageBatchCount:            config.MessageBatchCount,
 		postRelayMessageSleepSeconds: config.PostRelayMessageSleepSeconds,
 		client:                       config.Client,
 		gotifyTokenHeaderKey:         config.GotifyTokenHeaderKey,
+		disableTelegramNotification:  config.DisableTelegramNotification,
 	}
 }
 
 func (w Worker) Work() {
-	fetchUrl := w.gotifyBaseUrl + "/message?limit=" + strconv.Itoa(w.messageBatchCount)
+	fetchUrl := w.gotifyBaseUrl + "/application/" + w.gotifyAppId + "/message?limit=" + strconv.Itoa(w.messageBatchCount)
 	for {
 		messagesRes := w.fetchMessages(fetchUrl)
 		for i := range messagesRes.Messages {
@@ -81,7 +87,7 @@ func (w Worker) fetchMessages(fetchUrl string) *MessagesResponse {
 	}
 	if res.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(res.Body)
-		logger.Error("bad status", "response", string(body))
+		logger.Error("fetch response bad status", "response", string(body))
 		os.Exit(1)
 	}
 	messagesRes := new(MessagesResponse)
@@ -95,9 +101,10 @@ func (w Worker) fetchMessages(fetchUrl string) *MessagesResponse {
 func (w Worker) relayMessage(message string) {
 	logger.Info("relaying message", "message", message)
 	body := fmt.Sprintf(
-		`{"chat_id": "%s", "text": "%s", "disable_notification": false}`,
+		`{"chat_id": "%s", "text": "%s", "disable_notification": %t}`,
 		w.telegramChatId,
 		message,
+		w.disableTelegramNotification,
 	)
 	req, err := http.NewRequest(
 		http.MethodPost,
@@ -116,7 +123,7 @@ func (w Worker) relayMessage(message string) {
 	}
 	if res.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(res.Body)
-		logger.Error("bad status", "response", string(body))
+		logger.Error("relay response bad status", "response", string(body))
 		os.Exit(1)
 	}
 }
@@ -142,7 +149,7 @@ func (w Worker) deleteMessage(id int) {
 	}
 	if res.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(res.Body)
-		logger.Error("bad status", "response", string(body))
+		logger.Error("delete response bad status", "response", string(body))
 		os.Exit(1)
 	}
 }

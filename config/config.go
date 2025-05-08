@@ -11,6 +11,7 @@ import (
 type Config struct {
 	GotifyBaseUrl                string
 	GotifyClientToken            string
+	GotifyAppId                  string
 	TelegramToken                string
 	TelegramChatId               string
 	Client                       *http.Client
@@ -18,6 +19,7 @@ type Config struct {
 	MessageBatchCount            int
 	PostRelayMessageSleepSeconds int
 	GotifyTokenHeaderKey         string
+	DisableTelegramNotification  bool
 }
 
 const (
@@ -48,6 +50,7 @@ func LoadConfig() *Config {
 	return &Config{
 		GotifyBaseUrl:                k.MustString("GOTIFY_BASE_URL"),
 		GotifyClientToken:            k.MustString("GOTIFY_CLIENT_TOKEN"),
+		GotifyAppId:                  k.MustString("GOTIFY_APP_ID"),
 		TelegramToken:                k.MustString("TELEGRAM_TOKEN"),
 		TelegramChatId:               k.MustString("TELEGRAM_CHAT_ID"),
 		Client:                       http.DefaultClient,
@@ -55,5 +58,6 @@ func LoadConfig() *Config {
 		MessageBatchCount:            defaultInt(k, "MESSAGE_BATCH_COUNT", defaultMessageBatchCount),
 		PostRelayMessageSleepSeconds: defaultInt(k, "POST_RELAY_MESSAGE_SLEEP_SECONDS", defaultPostRelayMessageSleepSeconds),
 		GotifyTokenHeaderKey:         gotifyTokenHeaderKey,
+		DisableTelegramNotification:  k.Bool("DISABLE_TELEGRAM_NOTIFICATION"),
 	}
 }
